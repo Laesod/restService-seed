@@ -3,6 +3,8 @@ package com;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -38,7 +40,7 @@ import javax.sql.DataSource;
 @RestController // needed to enable rest end points within the class
 @EnableJpaAuditing
 
-public class Application{
+public class Application extends SpringBootServletInitializer {
     @Value("${db.type}")
     private String dbType;
 
@@ -143,6 +145,11 @@ public class Application{
         // # -1 : never reload, 0 always reload
         messageSource.setCacheSeconds(0);
         return messageSource;
+    }
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(Application.class);
     }
 
     public static void main(String[] args) {
