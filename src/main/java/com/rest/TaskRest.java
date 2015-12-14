@@ -93,6 +93,11 @@ public class TaskRest {
     public ResponseEntity changeTask(@PathVariable String taskGuid, @Valid @RequestBody TaskRequestDto taskRequestDto) {
         CurrentUserInfo.userName = taskRequestDto.getUserName();
         TaskEntity taskEntity = taskRepository.findByTaskGuid(taskGuid);
+
+        if(!CurrentUserInfo.userName.equals(taskEntity.getCreatedByUser())){
+            return new ResponseEntity(HttpStatus.FORBIDDEN);
+        }
+
         modelMapper.map(taskRequestDto, taskEntity);
         taskRepository.save(taskEntity);
         return new ResponseEntity(HttpStatus.OK);
@@ -100,8 +105,19 @@ public class TaskRest {
 
     @RequestMapping(value = "/deleteTask/{taskGuid}", method = RequestMethod.DELETE)
     @Transactional
-    public ResponseEntity deleteTask(@PathVariable String taskGuid) {
+    public ResponseEntity deleteTask(@PathVariable String taskGuid, @RequestParam(value = "createdByUser") String createdByUser) {
+        CurrentUserInfo.userName = createdByUser;
+
         TaskEntity taskEntity = taskRepository.findByTaskGuid(taskGuid);
+
+        if(taskEntity == null){
+            return new ResponseEntity(HttpStatus.NO_CONTENT);  // nothing to delete, check more info at http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete
+        }
+
+        if(!CurrentUserInfo.userName.equals(taskEntity.getCreatedByUser())){
+            return new ResponseEntity(HttpStatus.FORBIDDEN);
+        }
+
         taskRepository.delete(taskEntity);
 
         return new ResponseEntity(HttpStatus.OK);
