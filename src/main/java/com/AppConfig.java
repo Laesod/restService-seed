@@ -1,11 +1,14 @@
+/*
 package com;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+*/
 /**
  * Created by aautushk on 11/6/2015.
- */
+ *//*
+
 @Component
 public class AppConfig {
     @Value("${gatewayHost}")
@@ -52,3 +55,4 @@ public class AppConfig {
         this.mainAppPort = mainAppPort;
     }
 }
+*/
