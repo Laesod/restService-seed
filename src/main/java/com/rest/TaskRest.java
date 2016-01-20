@@ -42,15 +42,9 @@ public class TaskRest {
 
     private ModelMapper modelMapper = new ModelMapper(); //read more at http://modelmapper.org/user-manual/
 
-    @RequestMapping(value = "/getTasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Transactional
-    public Page<TaskResponseDto> getTasks(@PageableDefault Pageable pageable,
-           @RequestParam(value = "project", required = false) List<String> project,
-           @RequestParam(value = "type", required = false) List<String> type,
-           @RequestParam(value = "status", required = false) List<String> status,
-           @RequestParam(value = "description", required = false) String description,
-           @RequestParam(value = "createdByUser") String createdByUser) {
+    private long tasksListSize;
 
+    private List<TaskResponseDto> prepareTaskResponseDtos(Pageable pageable, List<String> project, List<String> type, List<String> status, String description, String createdByUser){
         TaskFilter taskFilter = new TaskFilter();
         taskFilter.setProjects(project);
         taskFilter.setTypes(type);
@@ -60,6 +54,7 @@ public class TaskRest {
 
         TaskSpecification taskSpecification = new TaskSpecification(taskFilter);
         final Page<TaskEntity> taskEntities = taskRepository.findAll(taskSpecification, pageable);
+        this.tasksListSize = taskEntities.getTotalElements();
 
         List<TaskResponseDto> taskResponseDtos = new ArrayList<TaskResponseDto>();
         if (taskEntities != null) {
@@ -72,8 +67,36 @@ public class TaskRest {
             }
         }
 
-        Page<TaskResponseDto> page = new PageImpl<>(taskResponseDtos, pageable, taskEntities.getTotalElements());
+        return taskResponseDtos;
+    }
+
+    @RequestMapping(value = "/getTasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public Page<TaskResponseDto> getTasks(@PageableDefault Pageable pageable,
+           @RequestParam(value = "project", required = false) List<String> project,
+           @RequestParam(value = "type", required = false) List<String> type,
+           @RequestParam(value = "status", required = false) List<String> status,
+           @RequestParam(value = "description", required = false) String description,
+           @RequestParam(value = "createdByUser") String createdByUser) {
+
+        List<TaskResponseDto> taskResponseDtos = this.prepareTaskResponseDtos(pageable, project, type, status, description, createdByUser);
+
+        Page<TaskResponseDto> page = new PageImpl<>(taskResponseDtos, pageable, this.tasksListSize);
         return page;
+    }
+
+    @RequestMapping(value = "/getTasksAsList", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public List<TaskResponseDto> getTasksAsList(@PageableDefault Pageable pageable,
+                                          @RequestParam(value = "project", required = false) List<String> project,
+                                          @RequestParam(value = "type", required = false) List<String> type,
+                                          @RequestParam(value = "status", required = false) List<String> status,
+                                          @RequestParam(value = "description", required = false) String description,
+                                          @RequestParam(value = "createdByUser") String createdByUser) {
+
+        List<TaskResponseDto> taskResponseDtos = this.prepareTaskResponseDtos(pageable, project, type, status, description, createdByUser);
+
+        return taskResponseDtos;
     }
 
     @RequestMapping(value = "/createTask", method = RequestMethod.POST)
